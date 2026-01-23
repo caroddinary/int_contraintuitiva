@@ -24,7 +24,7 @@ let colibriH, colibriW;
 
 //bolas de fuego
 let bolasFuego = [];
-let fuegoIntervalo = 28;
+let fuegoIntervalo = 30;
 let fuegoVel = 8;
 let fuegoRadio;
 
@@ -53,7 +53,7 @@ function setup() {
   configurarEscena();
 
   //tamaño bola de fuego
-  fuegoRadio = height * 0.04+0.08;
+  fuegoRadio = height * 0.03;
 
   //video handpose
   video = createCapture(VIDEO);
