@@ -1,4 +1,3 @@
-
 // Empezar juego
 let estadoJuego = "inicio";
 let btnEmpezar;
@@ -15,7 +14,7 @@ let jaguarImg;
 let jaguarX, jaguarY;
 const jaguarRatio = 1865 / 770;
 let jaguarH, jaguarW;
-let jaguarVel = 15;
+let jaguarVel = 20;
 
 //colibrí
 let colibriImg;
@@ -23,13 +22,11 @@ let colibriX, colibriY;
 const colibriRatio = 769 / 569;
 let colibriH, colibriW;
 
-//hechizos
-let hechizoImg;
+//bolas de fuego
 let bolasFuego = [];
-let fuegoIntervalo = 30;
-const hechizoRatio = 2048 / 1036;
-let fuegoH, fuegoW;
-let fuegoVel = 22;
+let fuegoIntervalo = 28;
+let fuegoVel = 8;
+let fuegoRadio;
 
 //handpose colibrí
 let video;
@@ -41,7 +38,6 @@ function preload() {
   brujaImg = loadImage("assets/bruja.png");
   jaguarImg = loadImage("assets/jaguar.png");
   colibriImg = loadImage("assets/colibri.png");
-  hechizoImg = loadImage("assets/hechizo.png");
 }
 
 function setup() {
@@ -56,11 +52,10 @@ function setup() {
 
   configurarEscena();
 
-  //fuego posicion
-  fuegoH = height * 0.1;
-  fuegoW = fuegoH * hechizoRatio;
+  //tamaño bola de fuego
+  fuegoRadio = height * 0.04+0.08;
 
-  //vidio handpose
+  //video handpose
   video = createCapture(VIDEO);
   video.size(640, 480);
   video.hide();
@@ -70,9 +65,8 @@ function setup() {
   handpose.on("predict", r => hands = r);
 }
 
-
 function configurarEscena() {
- 
+
   //posiciones
   brujaH = height * 0.63;
   brujaW = brujaH * brujaRatio;
@@ -99,16 +93,16 @@ function iniciarJuego() {
   btnEmpezar.hide();
 }
 
-//bolas de fuego desde bruja
+//crear bola de fuego
 function crearBolaFuego() {
   bolasFuego.push({
     x: brujaX + brujaW,
-    y: random(40, height - fuegoH - 40),
+    y: random(40, height - fuegoRadio * 2 - 40),
     vel: fuegoVel
   });
 }
 
-//choque
+//colision
 function colision(a, b, bw, bh) {
   return (
     a.x < b.x + bw &&
@@ -129,7 +123,6 @@ function draw() {
   background(0);
 
   image(fondoImg, 0, 0, width, height);
-
   image(brujaImg, brujaX, brujaY, brujaW, brujaH);
   image(jaguarImg, jaguarX, jaguarY, jaguarW, jaguarH);
 
@@ -154,25 +147,33 @@ function draw() {
     for (let i = bolasFuego.length - 1; i >= 0; i--) {
       let b = bolasFuego[i];
       b.x += b.vel;
-      image(hechizoImg, b.x, b.y, fuegoW, fuegoH);
+
+      //bola celeste
+      noStroke();
+      fill(120, 200, 255, 180);
+      ellipse(
+        b.x + fuegoRadio,
+        b.y + fuegoRadio,
+        fuegoRadio * 2
+      );
 
       //perder colibri
       if (colision(
         { x: colibriX, y: colibriY, w: colibriW, h: colibriH },
         b,
-        fuegoW,
-        fuegoH
+        fuegoRadio * 2,
+        fuegoRadio * 2
       )) activarGameOver();
 
       //perder jaguar
       if (colision(
         { x: jaguarX, y: jaguarY, w: jaguarW, h: jaguarH },
         b,
-        fuegoW,
-        fuegoH
+        fuegoRadio * 2,
+        fuegoRadio * 2
       )) activarGameOver();
 
-      if (b.x > width + fuegoW) {
+      if (b.x > width + fuegoRadio * 2) {
         bolasFuego.splice(i, 1);
       }
     }
@@ -180,7 +181,7 @@ function draw() {
 
   image(colibriImg, colibriX, colibriY, colibriW, colibriH);
 
-  //instrucciones
+  //inicio
   if (estadoJuego === "inicio") {
     fill(25, 15, 10, 220);
     rect(width / 2 - 380, height / 2 - 200, 760, 280, 20);
@@ -189,13 +190,12 @@ function draw() {
     textAlign(CENTER, CENTER);
     textSize(40);
     textStyle(BOLD);
-    text("La malvada bruja \n ha encontrado tu escondite", width / 2, height / 2 - 115);
+    text("¡La malvada bruja \n ha encontrado su escondite!", width / 2, height / 2 - 115);
 
     textSize(22);
     textStyle(NORMAL);
     text(
-  
-      " Cuando el cielo obedece a la tierra,\ny la tierra traiciona al cielo,\nmueve tu mano con juicio y teclea sin error,\no la bruja sellará el destino de jaguar y colibrí.",
+      "En este juego, el cielo obedece a la tierra,\ny la tierra obedece al cielo, te estamos observando\nmueve tu mano con juicio y teclea sin error,\no la bruja sellará el destino de jaguar y colibrí.",
       width / 2,
       height / 2 - 5
     );
@@ -207,12 +207,15 @@ function draw() {
   if (estadoJuego === "gameover") {
     btnEmpezar.position(width / 2 - 130, height - 80);
 
-  fill(200, 0, 0);
-  textAlign(CENTER, CENTER);
-  textSize(120);
-  textStyle(BOLD);
-  text("GAME OVER", width / 2, height / 2);
+    fill(200, 0, 0);
+    textAlign(CENTER, CENTER);
+    textSize(120);
+    textStyle(BOLD);
+    text("GAME OVER", width / 2, height / 2);
   }
+
+  if (estadoJuego === "jugando") textAlign(LEFT, TOP), fill(0, 48, 73), textSize(28), text("SCORE: " + floor(frameCount / 60), 20, 20);
+
 }
 
 function windowResized() {
